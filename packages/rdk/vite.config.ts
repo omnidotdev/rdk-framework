@@ -26,6 +26,7 @@ const viteConfig = defineConfig(({ mode }) => ({
         fiducial: resolve(__dirname, "src/fiducial/index.ts"),
         geolocation: resolve(__dirname, "src/geolocation/index.ts"),
         immersive: resolve(__dirname, "src/immersive/index.ts"),
+        magic: resolve(__dirname, "src/magic/index.ts"),
       },
       formats: ["es", "cjs"],
       fileName: (format, entryName) =>

@@ -7,6 +7,7 @@ export * from "./fiducial";
 export * from "./geolocation";
 export * from "./immersive";
 export { BACKEND_TYPES } from "./lib/types/engine";
+export * from "./magic";
 
 export type {
   Backend,

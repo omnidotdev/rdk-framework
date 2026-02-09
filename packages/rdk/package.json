@@ -46,6 +46,11 @@
       "types": "./build/immersive.d.ts",
       "import": "./build/immersive.js",
       "require": "./build/immersive.cjs"
+    },
+    "./magic": {
+      "types": "./build/magic.d.ts",
+      "import": "./build/magic.js",
+      "require": "./build/magic.cjs"
     }
   },
   "scripts": {
