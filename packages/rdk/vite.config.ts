@@ -21,10 +21,15 @@ const viteConfig = defineConfig(({ mode }) => ({
   build: {
     outDir: "build",
     lib: {
-      entry: resolve(__dirname, "src/index.ts"),
-      name: "RDK",
+      entry: {
+        index: resolve(__dirname, "src/index.ts"),
+        fiducial: resolve(__dirname, "src/fiducial/index.ts"),
+        geolocation: resolve(__dirname, "src/geolocation/index.ts"),
+        immersive: resolve(__dirname, "src/immersive/index.ts"),
+      },
       formats: ["es", "cjs"],
-      fileName: (format) => `index.${format === "es" ? "js" : "cjs"}`,
+      fileName: (format, entryName) =>
+        `${entryName}.${format === "es" ? "js" : "cjs"}`,
     },
     minify: mode === "production",
     rollupOptions: {

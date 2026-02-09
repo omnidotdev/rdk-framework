@@ -31,6 +31,21 @@
       "types": "./build/index.d.ts",
       "import": "./build/index.js",
       "require": "./build/index.cjs"
+    },
+    "./fiducial": {
+      "types": "./build/fiducial.d.ts",
+      "import": "./build/fiducial.js",
+      "require": "./build/fiducial.cjs"
+    },
+    "./geolocation": {
+      "types": "./build/geolocation.d.ts",
+      "import": "./build/geolocation.js",
+      "require": "./build/geolocation.cjs"
+    },
+    "./immersive": {
+      "types": "./build/immersive.d.ts",
+      "import": "./build/immersive.js",
+      "require": "./build/immersive.cjs"
     }
   },
   "scripts": {
