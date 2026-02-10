@@ -16,6 +16,8 @@ export interface MagicInternal {
   currentOrientation: { alpha: number; beta: number; gamma: number };
   initialOrientation: { alpha: number; beta: number; gamma: number };
   hasInitialOrientation: boolean;
+  /** Request device orientation permission (must be called from user gesture on iOS) */
+  requestOrientationPermission: () => Promise<boolean>;
 }
 
 /**
@@ -65,6 +67,7 @@ const createMagicBackend = (
   let worldAnchoringEnabled = options?.enableWorldAnchoring ?? true;
   let orientationHandler: ((event: DeviceOrientationEvent) => void) | null =
     null;
+  let gestureRetryHandler: (() => void) | null = null;
 
   const smoothingFactor = options?.smoothingFactor ?? DEFAULT_SMOOTHING_FACTOR;
   const deadZone = options?.deadZone ?? DEFAULT_DEAD_ZONE;
@@ -82,11 +85,57 @@ const createMagicBackend = (
   let rendererRef: THREE.WebGLRenderer | null = null;
   let sceneRef: THREE.Scene | null = null;
 
+  // Pre-allocated objects for quaternion-based orientation
+  const _deviceQuat = new THREE.Quaternion();
+  const _targetCameraQuat = new THREE.Quaternion();
+  const _euler = new THREE.Euler();
+  const _q0 = new THREE.Quaternion();
+  // -90° around X-axis: convert from device-upright frame to camera-forward frame
+  const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+  const _zee = new THREE.Vector3(0, 0, 1);
+  const initialQuat = new THREE.Quaternion();
+  const initialQuatInverse = new THREE.Quaternion();
+
+  /**
+   * Compute a Three.js quaternion from device orientation angles.
+   * Uses the standard W3C device orientation to Three.js conversion
+   * (YXZ Euler order with -90° X correction and screen orientation).
+   */
+  const computeDeviceQuaternion = (
+    target: THREE.Quaternion,
+    alphaRad: number,
+    betaRad: number,
+    gammaRad: number,
+  ) => {
+    const orient = ((screen.orientation?.angle ?? 0) * Math.PI) / 180;
+
+    _euler.set(betaRad, alphaRad, -gammaRad, "YXZ");
+    target.setFromEuler(_euler);
+    target.multiply(_q1);
+    target.multiply(_q0.setFromAxisAngle(_zee, -orient));
+  };
+
+  /**
+   * Compute the shortest signed delta between two angles in degrees.
+   * Handles the 0/360 wrap (e.g. 359 → 1 = +2, not -358).
+   */
+  const shortestAngleDelta = (from: number, to: number): number => {
+    let delta = ((to - from) % 360) + 360;
+    delta = ((delta + 180) % 360) - 180;
+    return delta;
+  };
+
   /**
    * Apply dead zone filtering to an orientation value.
    */
-  const applyDeadZone = (current: number, target: number): number => {
-    const delta = Math.abs(target - current);
+  const applyDeadZone = (
+    current: number,
+    target: number,
+    isCircular = false,
+  ): number => {
+    const delta = isCircular
+      ? Math.abs(shortestAngleDelta(current, target))
+      : Math.abs(target - current);
     return delta < deadZone ? current : target;
   };
 
@@ -94,6 +143,12 @@ const createMagicBackend = (
    * Lerp between two values.
    */
   const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
+
+  /**
+   * Lerp between two angle values in degrees, taking the shortest arc.
+   */
+  const lerpAngle = (a: number, b: number, t: number): number =>
+    (((a + shortestAngleDelta(a, b) * t) % 360) + 360) % 360;
 
   /**
    * Request device orientation permission on iOS 13+.
@@ -152,6 +207,17 @@ const createMagicBackend = (
         initialOrientation.alpha = rawOrientation.alpha;
         initialOrientation.beta = rawOrientation.beta;
         initialOrientation.gamma = rawOrientation.gamma;
+
+        // Capture initial quaternion for relative orientation computation
+        const { degToRad } = THREE.MathUtils;
+        computeDeviceQuaternion(
+          initialQuat,
+          degToRad(rawOrientation.alpha),
+          degToRad(rawOrientation.beta),
+          degToRad(rawOrientation.gamma),
+        );
+        initialQuatInverse.copy(initialQuat).invert();
+
         hasInitialOrientation = true;
       }
     };
@@ -226,6 +292,23 @@ const createMagicBackend = (
 
         if (granted) {
           setupOrientationListener();
+        } else {
+          // Auto-retry on first user gesture (iOS requires user interaction)
+          const retryOnGesture = async () => {
+            document.removeEventListener("click", retryOnGesture);
+            document.removeEventListener("touchend", retryOnGesture);
+            gestureRetryHandler = null;
+
+            const retryGranted = await requestOrientationPermission();
+
+            if (retryGranted) {
+              setupOrientationListener();
+            }
+          };
+
+          gestureRetryHandler = retryOnGesture;
+          document.addEventListener("click", retryOnGesture);
+          document.addEventListener("touchend", retryOnGesture);
         }
       }
 
@@ -254,9 +337,11 @@ const createMagicBackend = (
       if (!orientationEnabled || !orientationPermissionGranted) return;
 
       // Apply dead zone and smoothing to orientation values
+      // Alpha (0-360) uses circular-aware math to avoid jumps at 0/360 boundary
       const targetAlpha = applyDeadZone(
         currentOrientation.alpha,
         rawOrientation.alpha,
+        true,
       );
       const targetBeta = applyDeadZone(
         currentOrientation.beta,
@@ -267,7 +352,7 @@ const createMagicBackend = (
         rawOrientation.gamma,
       );
 
-      currentOrientation.alpha = lerp(
+      currentOrientation.alpha = lerpAngle(
         currentOrientation.alpha,
         targetAlpha,
         smoothingFactor,
@@ -283,24 +368,23 @@ const createMagicBackend = (
         smoothingFactor,
       );
 
-      // Apply orientation to camera if world anchoring is enabled
+      // Apply orientation to camera using quaternion math
       if (worldAnchoringEnabled && cameraRef && hasInitialOrientation) {
-        const degToRad = THREE.MathUtils.degToRad;
+        const { degToRad } = THREE.MathUtils;
 
-        // Compute relative orientation from initial
-        const relAlpha = currentOrientation.alpha - initialOrientation.alpha;
-        const relBeta = currentOrientation.beta - initialOrientation.beta;
-        const relGamma = currentOrientation.gamma - initialOrientation.gamma;
-
-        // Apply Euler rotation (ZXY order is standard for device orientation)
-        const euler = new THREE.Euler(
-          degToRad(relBeta),
-          degToRad(relAlpha),
-          degToRad(-relGamma),
-          "ZXY",
+        // Compute current device quaternion from raw orientation
+        computeDeviceQuaternion(
+          _deviceQuat,
+          degToRad(rawOrientation.alpha),
+          degToRad(rawOrientation.beta),
+          degToRad(rawOrientation.gamma),
         );
 
-        cameraRef.quaternion.setFromEuler(euler);
+        // Relative rotation: inverse(initial) * current
+        _targetCameraQuat.copy(initialQuatInverse).multiply(_deviceQuat);
+
+        // Slerp camera toward target for smooth movement
+        cameraRef.quaternion.slerp(_targetCameraQuat, smoothingFactor);
       }
 
       // Update video texture if present
@@ -314,6 +398,13 @@ const createMagicBackend = (
       if (orientationHandler) {
         window.removeEventListener("deviceorientation", orientationHandler);
         orientationHandler = null;
+      }
+
+      // Remove gesture retry listener
+      if (gestureRetryHandler) {
+        document.removeEventListener("click", gestureRetryHandler);
+        document.removeEventListener("touchend", gestureRetryHandler);
+        gestureRetryHandler = null;
       }
 
       // Remove resize handler
@@ -366,6 +457,8 @@ const createMagicBackend = (
       initialOrientation.alpha = 0;
       initialOrientation.beta = 0;
       initialOrientation.gamma = 0;
+      initialQuat.identity();
+      initialQuatInverse.identity();
     },
 
     getInternal: (): MagicInternal => ({
@@ -378,6 +471,15 @@ const createMagicBackend = (
       currentOrientation: { ...currentOrientation },
       initialOrientation: { ...initialOrientation },
       hasInitialOrientation,
+      requestOrientationPermission: async () => {
+        const granted = await requestOrientationPermission();
+
+        if (granted && !orientationHandler) {
+          setupOrientationListener();
+        }
+
+        return granted;
+      },
     }),
   };
 };
