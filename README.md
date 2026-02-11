@@ -22,6 +22,7 @@ RDK unifies multiple spatial and XR technologies, such as AR.js for marker-based
 | **Fiducial (Pattern/Barcode)**       | ⚗️ Experimental | [AR.js (ARToolKit)](https://github.com/ar-js-org/ar.js)                                              | ✅      | ✅             | Uses `.patt` or barcode markers. Reliable for printed markers. No WebXR dependency.       |
 | **Image Tracking (Natural Feature)** | 🧭 Planned      | [AR.js (ARToolKit)](https://github.com/ar-js-org/ar.js)                                              | N/A     | N/A            | May use `.mind` or `XRTrackedImage`. Ideal for logos or posters. Requires image database. |
 | **Geolocation / World Anchors**      | ⚗️ Experimental | [LocAR.js](https://github.com/ar-js-org/locar.js)                                                    | ✅      | ✅             | Uses GPS + compass; may later integrate Mapbox or Cesium.                                 |
+| **Magic Window (Camera Passthrough)**| ⚗️ Experimental | DeviceOrientation + getUserMedia                                                                      | ✅      | ✅             | Camera passthrough with device orientation tracking. No WebXR dependency; works everywhere |
 | **WebXR Native AR/VR Session**       | ⚗️ Experimental | [`@react-three/xr`](https://github.com/pmndrs/xr)                                                    | ✅      | ❌[^ios-webxr] | Entry point for immersive AR/VR sessions.                                                 |
 | **Face Tracking**                    | 🧭 Planned      | -                                                                                                    | N/A     | N/A            | Uses webcam + ML model; lightweight and fast.                                             |
 | **Body/Pose Tracking**               | 🧭 Planned      | [WebXR Body Tracking](https://github.com/immersive-web/body-tracking)                                | N/A     | N/A            | Real-time skeletal tracking. GPU/WebGL acceleration required.                             |
@@ -100,6 +101,7 @@ See the demo applications for examples of usage:
 - [`apps/fiducial-demo`](./apps/fiducial-demo): Fiducial marker tracking powered by AR.js
 - [`apps/geolocation-demo`](./apps/geolocation-demo): GPS-based AR powered by LocAR.js
 - [`apps/immersive-demo`](./apps/immersive-demo): WebXR powered by `@react-three/xr`
+- [`apps/magic-demo`](./apps/magic-demo): Magic window camera passthrough with device orientation
 
 ## Goals: the "Why"
 
