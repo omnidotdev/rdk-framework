@@ -1,6 +1,6 @@
 {
   "name": "@omnidotdev/rdk",
-  "description": "AR.js with react-three-fiber",
+  "description": "Reality Development Kit, a unified React-first XR engine",
   "version": "0.9.0",
   "license": "MIT",
   "type": "module",
