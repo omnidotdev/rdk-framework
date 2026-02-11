@@ -7,13 +7,13 @@
   "main": "build/index.js",
   "module": "build/index.js",
   "types": "build/index.d.ts",
-  "homepage": "https://github.com/omnidotdev/rdk#readme",
+  "homepage": "https://github.com/omnidotdev/rdk-framework#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/omnidotdev/rdk.git"
+    "url": "git+https://github.com/omnidotdev/rdk-framework.git"
   },
   "bugs": {
-    "url": "https://github.com/omnidotdev/rdk/issues"
+    "url": "https://github.com/omnidotdev/rdk-framework/issues"
   },
   "files": [
     "build/"
