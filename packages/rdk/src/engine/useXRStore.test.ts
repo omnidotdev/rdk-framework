@@ -166,6 +166,18 @@ describe("useXRStore", () => {
       expect(mockBackend.update).toHaveBeenCalledWith(0.016);
     });
 
+    it("registers magic backend", async () => {
+      const mockBackend = createMockBackend(BACKEND_TYPES.MAGIC);
+      const mockThreeRefs = createMockThreeRefs();
+
+      await act(async () => {
+        await getXRStore().registerBackend(mockBackend, mockThreeRefs);
+      });
+
+      const store = getXRStore();
+      expect(store.backends.get(BACKEND_TYPES.MAGIC)).toBe(mockBackend);
+    });
+
     it("provides O(1) backend lookup by type", async () => {
       const geoBackend = createMockBackend(BACKEND_TYPES.GEOLOCATION);
       const immersiveBackend = createMockBackend(BACKEND_TYPES.IMMERSIVE);
