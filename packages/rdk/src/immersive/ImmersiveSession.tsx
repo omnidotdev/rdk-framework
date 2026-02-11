@@ -7,8 +7,6 @@ import { getXRStore } from "../engine/useXRStore";
 import type { Backend } from "lib/types/engine";
 import type { PropsWithChildren } from "react";
 
-// TODO implement iOS fallback. iOS does not currently support WebXR (https://caniuse.com/webxr), but a magic window fallback mode can be implemented as a stopgap
-
 /**
  * Create a minimal immersive backend for tracking purposes.
  * WebXR is managed by @react-three/xr, so this is just a marker.
