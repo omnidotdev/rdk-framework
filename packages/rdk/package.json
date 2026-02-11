@@ -1,7 +1,7 @@
 {
   "name": "@omnidotdev/rdk",
   "description": "AR.js with react-three-fiber",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "license": "MIT",
   "type": "module",
   "main": "build/index.js",

@@ -1,5 +1,13 @@
 # @omnidotdev/rdk
 
+## 0.9.0
+
+### Minor Changes
+
+- [#67](https://github.com/omnidotdev/rdk-framework/pull/67) [`bb058b5`](https://github.com/omnidotdev/rdk-framework/commit/bb058b5afa0ba72e2b31a6e52678f915c7fa4d87) Thanks [@coopbri](https://github.com/coopbri)! - Add magic window module with camera passthrough and device orientation tracking
+
+- [#65](https://github.com/omnidotdev/rdk-framework/pull/65) [`67807e7`](https://github.com/omnidotdev/rdk-framework/commit/67807e7b82a33fd4639ac0a2a8d6f2bcfce541e9) Thanks [@coopbri](https://github.com/coopbri)! - Add subpath exports for fiducial, geolocation, and immersive modules with multi-entry Vite build
+
 ## 0.8.0
 
 ### Minor Changes
