@@ -93,7 +93,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.182.0",
-    "jsdom": "^27.4.0",
+    "jsdom": "^28.0.0",
     "locar": "^0.1.8",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
