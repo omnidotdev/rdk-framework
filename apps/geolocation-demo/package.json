@@ -15,7 +15,7 @@
     "@biomejs/biome": "^2.3.11",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.182.0",
+    "@types/three": "^0.183.0",
     "@vitejs/plugin-react": "^5.1.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.0",
@@ -28,6 +28,6 @@
     "locar": "^0.1.8",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "three": "^0.182.0"
+    "three": "^0.183.0"
   }
 }
